@@ -30,3 +30,16 @@
 *.exe
 *.out
 *.app
+
+# Build
+build/
+export/
+*.ninja
+CMakeFiles/
+cmake_install.cmake
+
+# Python files
+env/
+__pycache__
+*.pyc
+*.egg-info/
