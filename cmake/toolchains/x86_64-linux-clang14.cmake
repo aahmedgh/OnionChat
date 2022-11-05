@@ -1,3 +1,3 @@
-include(x86_64-base)
-include(linux-base)
-include(clang14-base)
+include(toolchains/bases/x86_64-base)
+include(toolchains/bases/linux-base)
+include(toolchains/bases/clang14-base)

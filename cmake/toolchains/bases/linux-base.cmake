@@ -1,4 +1,4 @@
-if(NOT ${CMAKE_HOST_SYSTEM} STREQUAL "Linux")
+if(NOT ${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
   message(FATAL_ERROR "Cannot build on a non Linux system")
 endif()
 
