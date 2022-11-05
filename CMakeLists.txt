@@ -12,7 +12,8 @@ if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
 endif()
 
 add_subdirectory(thirdparty)
-add_subdirectory(transports)
+add_subdirectory(common)
+add_subdirectory(transport)
 
 # Install gtest
 include(FetchContent)
