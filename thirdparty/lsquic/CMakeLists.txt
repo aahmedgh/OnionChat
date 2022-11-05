@@ -15,9 +15,14 @@ ExternalProject_Add(
              -DBORINGSSL_LIB_crypto=boringssl-crypto
              -DLSQUIC_TESTS=0
              -DLSQUIC_BIN=0
+  BUILD_BYPRODUCTS
+    ${LSQUIC_LIB_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}lsquic${CMAKE_STATIC_LIBRARY_SUFFIX}
+  UPDATE_COMMAND ""
   INSTALL_COMMAND "" # Do not build install target
   TEST_COMMAND "" # Do not build test target
   DEPENDS boringssl-ssl boringssl-crypto)
+
+file(MAKE_DIRECTORY ${LSQUIC_INCLUDE_DIR})
 
 add_library(lsquic STATIC IMPORTED GLOBAL)
 set_target_properties(
