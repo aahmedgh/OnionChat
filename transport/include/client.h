@@ -18,7 +18,7 @@ template <ConnectionType T> class Client {
     Client(const std::string &address, unsigned short port, Args... args)
         : m_transport(address, port, false, std::forward<Args>(args)...){};
 
-    void SendData(const buffer_t &data) { m_transport.SendData(); }
+    void SendData(const buffer_t &data) { m_transport.SendData(data); }
 
   private:
     T m_transport;
