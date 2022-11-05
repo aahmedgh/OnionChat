@@ -6,15 +6,14 @@
 
 namespace onion {
 
-template <typename Protocol> class Connection {
+class Connection {
   public:
     template <typename... Args>
     Connection(const std::string &address, unsigned short port, bool server)
         : m_address(address), m_port(port), m_server(server){};
+    virtual ~Connection() = default;
 
-    void SendData(const buffer_t &data) const {
-        static_cast<Protocol const &>(*this).Send(data);
-    }
+    virtual void SendData(const buffer_t &data) const = 0;
 
   protected:
     std::string m_address;

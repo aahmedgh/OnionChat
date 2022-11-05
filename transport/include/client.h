@@ -9,17 +9,19 @@
 
 namespace onion {
 
-template <class Protocol> class Client {
+template <typename T>
+concept ConnectionType = std::is_base_of<Connection, T>::value;
+
+template <ConnectionType T> class Client {
   public:
     template <typename... Args>
     Client(const std::string &address, unsigned short port, Args... args)
-        : m_transport(std::make_unique<Protocol>(
-              address, port, false, std::forward<Args>(args)...)){};
+        : m_transport(address, port, false, std::forward<Args>(args)...){};
 
-    void SendData(const buffer_t &data) { m_transport->SendData(data); }
+    void SendData(const buffer_t &data) { m_transport.SendData(); }
 
   private:
-    std::unique_ptr<Protocol> m_transport;
+    T m_transport;
 };
 
 } // namespace onion

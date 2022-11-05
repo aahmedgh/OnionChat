@@ -4,12 +4,12 @@
 
 namespace onion {
 
-class Quic : public Connection<Quic> {
+class Quic : public Connection {
   public:
     Quic(const std::string &address, unsigned short port, bool server)
-        : Connection<Quic>(address, port, server){};
+        : Connection(address, port, server){};
 
-    void Send(const buffer_t &data) const;
+    virtual void SendData(const buffer_t &data) const;
 };
 
 } // namespace onion
