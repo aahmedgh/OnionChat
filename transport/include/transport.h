@@ -6,11 +6,11 @@
 
 namespace onion {
 
-class Connection {
+class Transport {
   public:
-    Connection(const std::string &address, unsigned short port, bool server)
+    Transport(const std::string &address, unsigned short port, bool server)
         : m_address(address), m_port(port), m_server(server){};
-    virtual ~Connection() = default;
+    virtual ~Transport() = default;
 
     virtual void SendData(const buffer_t &data) const = 0;
 

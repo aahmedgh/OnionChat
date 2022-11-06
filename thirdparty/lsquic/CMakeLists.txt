@@ -31,7 +31,7 @@ set_target_properties(
     IMPORTED_LOCATION
     ${LSQUIC_LIB_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}lsquic${CMAKE_STATIC_LIBRARY_SUFFIX}
     INTERFACE_INCLUDE_DIRECTORIES ${LSQUIC_INCLUDE_DIR})
-find_package(ZLIB)
+find_package(ZLIB REQUIRED) # TODO: Get zlib build in source for cross compiling
 target_link_libraries(lsquic INTERFACE boringssl-ssl boringssl-crypto
                                        ZLIB::ZLIB)
 add_dependencies(lsquic ${LSQUIC_EXTERNAL})

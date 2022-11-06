@@ -4,15 +4,15 @@
 #include <string>
 #include <utility>
 
-#include "connection.h"
 #include "datatypes.h"
+#include "transport.h"
 
 namespace onion {
 
 template <typename T>
-concept ConnectionType = std::is_base_of<Connection, T>::value;
+concept TransportType = std::is_base_of<Transport, T>::value;
 
-template <ConnectionType T> class Client {
+template <TransportType T> class Client {
   public:
     template <typename... Args>
     Client(const std::string &address, unsigned short port, Args... args)

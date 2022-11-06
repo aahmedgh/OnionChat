@@ -21,18 +21,18 @@ void Logger::Log(const std::string &level, const std::string &component,
 }
 
 unsigned int Logger::GetPid() {
-#ifdef _WIN32
-    return GetCurrentProcessId();
-#else
+#ifndef _WIN32
     return getpid();
+#else
+    return GetCurrentProcessId();
 #endif
 }
 
 unsigned int Logger::GetTid() {
-#ifdef _WIN32
-    return GetCurrentThreadId() :
-#else
+#ifndef _WIN32
     return gettid();
+#else
+    return GetCurrentThreadId();
 #endif
 }
 
