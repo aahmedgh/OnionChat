@@ -75,6 +75,5 @@ struct lsquic_conn_ctx {
     lsquic_conn_t *connection;
     struct onion::quic::CEngineContext *context;
 
-    lsquic_conn_ctx(lsquic_conn_t *conn,
-                    struct onion::quic::CEngineContext *ctx);
+    lsquic_conn_ctx(lsquic_conn_t *conn, struct onion::quic::CEngineContext *ctx);
 };

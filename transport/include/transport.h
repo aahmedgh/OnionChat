@@ -10,8 +10,7 @@ enum class TransportMode { CLIENT, SERVER };
 
 class Transport {
   public:
-    Transport(const std::string &address, unsigned short port,
-              TransportMode mode)
+    Transport(const std::string &address, unsigned short port, TransportMode mode)
         : m_address(address), m_port(port), m_mode(mode){};
     virtual ~Transport() = default;
 

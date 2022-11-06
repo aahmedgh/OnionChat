@@ -43,9 +43,7 @@ void EventBaseDeleter::operator()(event_base *ptr) {
 }
 
 // BEGIN LSQUIC ENGINE FUNCTIONS/CALLBACKS
-static int SendPacketsOut(void *packets_out_ctx,
-                          const struct lsquic_out_spec *out_spec,
-                          unsigned int n_packets_out) {
+static int SendPacketsOut(void *packets_out_ctx, const struct lsquic_out_spec *out_spec, unsigned int n_packets_out) {
     DEBUG_LOG(QUIC, "Sending packets")
 
 #ifndef _WIN32
@@ -58,8 +56,7 @@ static int SendPacketsOut(void *packets_out_ctx,
     // TODO: Need to add ancillary information (cmsghdr)
     for (count = 0; count < n_packets_out; ++count) {
 #ifndef _WIN32
-        msg.msg_name = reinterpret_cast<void *>(
-            const_cast<struct sockaddr *>(out_spec[count].dest_sa));
+        msg.msg_name = reinterpret_cast<void *>(const_cast<struct sockaddr *>(out_spec[count].dest_sa));
         msg.msg_namelen = sizeof(struct sockaddr_in);
         msg.msg_iov = out_spec[count].iov;
         msg.msg_iovlen = out_spec[count].iovlen;
@@ -99,22 +96,18 @@ static void TimerFunc(int file_descriptor, short event_flags, void *arg) {
         ProcessConnections(context);
 }
 
-static lsquic_conn_ctx_t *ClientOnNewConnection(void *stream_if_ctx,
-                                                lsquic_conn_t *conn) {
+static lsquic_conn_ctx_t *ClientOnNewConnection(void *stream_if_ctx, lsquic_conn_t *conn) {
     auto *context = reinterpret_cast<ClientContext *>(stream_if_ctx);
-    context->conn_ctx = std::make_unique<lsquic_conn_ctx_t>(
-        conn, static_cast<CEngineContext *>(context));
+    context->conn_ctx = std::make_unique<lsquic_conn_ctx_t>(conn, static_cast<CEngineContext *>(context));
     lsquic_conn_make_stream(conn);
 
     return context->conn_ctx.get();
 }
 
-static lsquic_conn_ctx_t *ServerOnNewConnection(void *stream_if_ctx,
-                                                lsquic_conn_t *conn) {
+static lsquic_conn_ctx_t *ServerOnNewConnection(void *stream_if_ctx, lsquic_conn_t *conn) {
     auto *context = reinterpret_cast<ServerContext *>(stream_if_ctx);
-    auto &ptr =
-        context->conn_ctx.emplace_back(std::make_unique<lsquic_conn_ctx_t>(
-            conn, static_cast<CEngineContext *>(context)));
+    auto &ptr = context->conn_ctx.emplace_back(
+        std::make_unique<lsquic_conn_ctx_t>(conn, static_cast<CEngineContext *>(context)));
 
     DEBUG_LOG(QUIC, "Received new connection")
     return ptr.get();
@@ -123,8 +116,7 @@ static lsquic_conn_ctx_t *ServerOnNewConnection(void *stream_if_ctx,
 
 CEngineContext::CEngineContext(event_base &event_base, TransportMode mode)
     : socket(OpenSocket()), engine_mode(mode),
-      timer(event_new(&event_base, -1, 0, TimerFunc,
-                      reinterpret_cast<void *>(this))) {}
+      timer(event_new(&event_base, -1, 0, TimerFunc, reinterpret_cast<void *>(this))) {}
 
 CEngineContext::~CEngineContext() {
     TRACE_LOG(QUIC, "Destroying context")
@@ -133,13 +125,10 @@ CEngineContext::~CEngineContext() {
 }
 
 void CEngineContext::InitEngine(const lsquic_engine_api &engine_api) {
-    engine.reset(lsquic_engine_new(
-        engine_mode == TransportMode::CLIENT ? 0 : LSENG_SERVER, &engine_api));
+    engine.reset(lsquic_engine_new(engine_mode == TransportMode::CLIENT ? 0 : LSENG_SERVER, &engine_api));
 }
 
-Engine::Engine()
-    : m_event_base(EventBasePtr{event_base_new()}), m_client(*m_event_base),
-      m_server(*m_event_base) {
+Engine::Engine() : m_event_base(EventBasePtr{event_base_new()}), m_client(*m_event_base), m_server(*m_event_base) {
     // TODO: Check for error conditions
     // TODO: Defines for flags (SERVER_ONLY, CLIENT_ONLY)
     DEBUG_LOG(QUIC, "Initializing QUIC Engine")
@@ -150,11 +139,10 @@ Engine::Engine()
         .on_new_conn = ClientOnNewConnection,
     };
 
-    lsquic_engine_api engine_api{
-        .ea_stream_if = &client_if,
-        .ea_stream_if_ctx = reinterpret_cast<void *>(&m_client),
-        .ea_packets_out = SendPacketsOut,
-        .ea_packets_out_ctx = reinterpret_cast<void *>(&m_client)};
+    lsquic_engine_api engine_api{.ea_stream_if = &client_if,
+                                 .ea_stream_if_ctx = reinterpret_cast<void *>(&m_client),
+                                 .ea_packets_out = SendPacketsOut,
+                                 .ea_packets_out_ctx = reinterpret_cast<void *>(&m_client)};
     m_client.InitEngine(engine_api);
 
     // Initialize the server engine
@@ -173,13 +161,11 @@ Engine::~Engine() {
 }
 
 lsquic_engine_t *Engine::GetEngine(TransportMode mode) const {
-    return mode == TransportMode::CLIENT ? m_client.engine.get()
-                                         : m_server.engine.get();
+    return mode == TransportMode::CLIENT ? m_client.engine.get() : m_server.engine.get();
 }
 
 } // namespace quic
 } // namespace onion
 
-lsquic_conn_ctx::lsquic_conn_ctx(lsquic_conn_t *conn,
-                                 struct onion::quic::CEngineContext *ctx)
+lsquic_conn_ctx::lsquic_conn_ctx(lsquic_conn_t *conn, struct onion::quic::CEngineContext *ctx)
     : connection(conn), context(ctx) {}
