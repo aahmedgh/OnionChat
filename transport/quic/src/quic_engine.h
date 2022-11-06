@@ -1,6 +1,7 @@
 #pragma once
 
 #include "singleton.h"
+#include "transport.h"
 #include <event2/event.h>
 #include <lsquic.h>
 #include <memory>
@@ -10,17 +11,12 @@ namespace onion {
 namespace quic {
 
 struct EngineDeleter {
-    void operator()(lsquic_engine_t *ptr) {
-        if (ptr != nullptr)
-            lsquic_engine_destroy(ptr);
-    }
+    void operator()(lsquic_engine_t *ptr);
 };
 
 struct EventBaseDeleter {
-    void operator()(event_base *ptr) { event_base_free(ptr); }
+    void operator()(event_base *ptr);
 };
-
-enum class EngineType { CLIENT, SERVER };
 
 using EnginePtr = std::unique_ptr<lsquic_engine_t, EngineDeleter>;
 using EventBasePtr = std::unique_ptr<event_base, EventBaseDeleter>;
@@ -34,36 +30,27 @@ using SocketType = int;
 // C style struct that is not templated for easy casting
 struct CEngineContext {
     SocketType socket;
-    EngineType engine_type;
+    TransportMode engine_mode;
     EnginePtr engine;
     struct event *timer;
     bool stopped;
 
-    CEngineContext(event_base &event_base, EngineType type);
+    CEngineContext(event_base &event_base, TransportMode mode);
     ~CEngineContext();
     void InitEngine(const lsquic_engine_api &engine_api);
 };
-
-struct ConnContext {
-    lsquic_conn_t *connection;
-    struct CEngineContext *context;
-
-    ConnContext(lsquic_conn_t *conn, struct CEngineContext *ctx);
-};
-
-using lsquic_conn_ctx_t = struct ConnContext;
 using ConnCtxPtr = std::unique_ptr<lsquic_conn_ctx_t>;
 
-template <EngineType type> struct EngineContext : CEngineContext {
-    EngineContext(event_base &event_base) : CEngineContext(event_base, type){};
+template <TransportMode mode> struct EngineContext : CEngineContext {
+    EngineContext(event_base &event_base) : CEngineContext(event_base, mode){};
 };
 
-struct ClientContext : EngineContext<EngineType::CLIENT> {
+struct ClientContext : EngineContext<TransportMode::CLIENT> {
     using EngineContext::EngineContext;
     ConnCtxPtr conn_ctx;
 };
 
-struct ServerContext : EngineContext<EngineType::SERVER> {
+struct ServerContext : EngineContext<TransportMode::SERVER> {
     using EngineContext::EngineContext;
     std::vector<ConnCtxPtr> conn_ctx;
 };
@@ -73,7 +60,7 @@ class Engine : public Singleton<Engine> {
     Engine();
     ~Engine();
 
-    lsquic_engine_t *GetEngine(EngineType type) const;
+    lsquic_engine_t *GetEngine(TransportMode mode) const;
 
   private:
     EventBasePtr m_event_base;
@@ -83,3 +70,11 @@ class Engine : public Singleton<Engine> {
 
 } // namespace quic
 } // namespace onion
+
+struct lsquic_conn_ctx {
+    lsquic_conn_t *connection;
+    struct onion::quic::CEngineContext *context;
+
+    lsquic_conn_ctx(lsquic_conn_t *conn,
+                    struct onion::quic::CEngineContext *ctx);
+};

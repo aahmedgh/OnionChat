@@ -30,6 +30,18 @@ static void CloseSocket(SocketType sock) {
 #endif
 }
 
+void EngineDeleter::operator()(lsquic_engine_t *ptr) {
+    if (ptr != nullptr) {
+        TRACE_LOG(QUIC, "Deleting engine ptr")
+        lsquic_engine_destroy(ptr);
+    }
+}
+
+void EventBaseDeleter::operator()(event_base *ptr) {
+    TRACE_LOG(QUIC, "Deleting event base ptr")
+    event_base_free(ptr);
+}
+
 // BEGIN LSQUIC ENGINE FUNCTIONS/CALLBACKS
 static int SendPacketsOut(void *packets_out_ctx,
                           const struct lsquic_out_spec *out_spec,
@@ -109,24 +121,21 @@ static lsquic_conn_ctx_t *ServerOnNewConnection(void *stream_if_ctx,
 }
 // END LSQUIC ENGINE FUNCTIONS/CALLBACKS
 
-CEngineContext::CEngineContext(event_base &event_base, EngineType type)
-    : socket(OpenSocket()), engine_type(type),
+CEngineContext::CEngineContext(event_base &event_base, TransportMode mode)
+    : socket(OpenSocket()), engine_mode(mode),
       timer(event_new(&event_base, -1, 0, TimerFunc,
                       reinterpret_cast<void *>(this))) {}
 
 CEngineContext::~CEngineContext() {
-    DEBUG_LOG(QUIC, "Destroying context")
+    TRACE_LOG(QUIC, "Destroying context")
     stopped = true;
     CloseSocket(socket);
 }
 
 void CEngineContext::InitEngine(const lsquic_engine_api &engine_api) {
     engine.reset(lsquic_engine_new(
-        engine_type == EngineType::CLIENT ? 0 : LSENG_SERVER, &engine_api));
+        engine_mode == TransportMode::CLIENT ? 0 : LSENG_SERVER, &engine_api));
 }
-
-ConnContext::ConnContext(lsquic_conn_t *conn, struct CEngineContext *ctx)
-    : connection(conn), context(ctx) {}
 
 Engine::Engine()
     : m_event_base(EventBasePtr{event_base_new()}), m_client(*m_event_base),
@@ -136,27 +145,41 @@ Engine::Engine()
     DEBUG_LOG(QUIC, "Initializing QUIC Engine")
     lsquic_global_init(LSQUIC_GLOBAL_CLIENT | LSQUIC_GLOBAL_SERVER);
 
+    // Initialize the client engine
+    struct lsquic_stream_if client_if {
+        .on_new_conn = ClientOnNewConnection,
+    };
+
     lsquic_engine_api engine_api{
-        .ea_stream_if = nullptr,
+        .ea_stream_if = &client_if,
         .ea_stream_if_ctx = reinterpret_cast<void *>(&m_client),
         .ea_packets_out = SendPacketsOut,
         .ea_packets_out_ctx = reinterpret_cast<void *>(&m_client)};
     m_client.InitEngine(engine_api);
 
+    // Initialize the server engine
+    struct lsquic_stream_if server_if {
+        .on_new_conn = ServerOnNewConnection,
+    };
+    engine_api.ea_stream_if = &server_if;
     engine_api.ea_stream_if_ctx = reinterpret_cast<void *>(&m_server);
     engine_api.ea_packets_out_ctx = reinterpret_cast<void *>(&m_server);
     m_server.InitEngine(engine_api);
 }
 
 Engine::~Engine() {
-    DEBUG_LOG(QUIC, "Destroying engine")
+    TRACE_LOG(QUIC, "Destroying engine")
     lsquic_global_cleanup();
 }
 
-lsquic_engine_t *Engine::GetEngine(EngineType type) const {
-    return type == EngineType::CLIENT ? m_client.engine.get()
-                                      : m_server.engine.get();
+lsquic_engine_t *Engine::GetEngine(TransportMode mode) const {
+    return mode == TransportMode::CLIENT ? m_client.engine.get()
+                                         : m_server.engine.get();
 }
 
 } // namespace quic
 } // namespace onion
+
+lsquic_conn_ctx::lsquic_conn_ctx(lsquic_conn_t *conn,
+                                 struct onion::quic::CEngineContext *ctx)
+    : connection(conn), context(ctx) {}

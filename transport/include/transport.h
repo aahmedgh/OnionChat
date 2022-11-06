@@ -6,10 +6,13 @@
 
 namespace onion {
 
+enum class TransportMode { CLIENT, SERVER };
+
 class Transport {
   public:
-    Transport(const std::string &address, unsigned short port, bool server)
-        : m_address(address), m_port(port), m_server(server){};
+    Transport(const std::string &address, unsigned short port,
+              TransportMode mode)
+        : m_address(address), m_port(port), m_mode(mode){};
     virtual ~Transport() = default;
 
     virtual void SendData(const buffer_t &data) const = 0;
@@ -17,7 +20,7 @@ class Transport {
   protected:
     std::string m_address;
     unsigned short m_port;
-    bool m_server;
+    TransportMode m_mode;
 };
 
 } // namespace onion
