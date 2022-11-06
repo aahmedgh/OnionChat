@@ -8,7 +8,6 @@ namespace onion {
 
 class Connection {
   public:
-    template <typename... Args>
     Connection(const std::string &address, unsigned short port, bool server)
         : m_address(address), m_port(port), m_server(server){};
     virtual ~Connection() = default;

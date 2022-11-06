@@ -13,6 +13,7 @@ endif()
 
 add_subdirectory(thirdparty)
 add_subdirectory(common)
+add_subdirectory(logging)
 add_subdirectory(transport)
 
 # Install gtest
