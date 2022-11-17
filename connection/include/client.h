@@ -9,17 +9,18 @@
 
 namespace onion {
 
-template <ClientType T> class Client : private T {
+template <ConnectionType T> class Client {
   public:
     template <typename... Args>
     Client(const std::string &address, unsigned short port, Args... args)
-        : T(std::forward<Args>(args)...), m_address(address), m_port(port){};
+        : m_connection(address, port, std::forward<Args>(args)...) {
+        m_connection.Connect();
+    }
 
-    void Send(const buffer_t &data) { T::SendData(m_address, m_port, data); }
+    int SendData(buffer_t &data) { return m_connection.Write(data); }
 
   private:
-    std::string m_address;
-    unsigned short m_port;
+    T m_connection;
 };
 
 } // namespace onion
