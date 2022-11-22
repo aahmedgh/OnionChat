@@ -37,6 +37,28 @@ int Socket::Connect(const std::string &address, unsigned short port) const {
     return 0;
 }
 
-int Socket::SendMsg(buffer_t &data) const { return 0; }
+int Socket::SendMsg(buffer_t &data) const {
+    struct sockaddr name {};
+    struct iovec iov {
+        .iov_base = reinterpret_cast<void *>(data.data()), .iov_len = data.size()
+    };
+    // TODO: Other fields
+    struct msghdr msg {
+        .msg_namelen = sizeof(name), .msg_iov = &iov, .msg_iovlen = 1
+    };
+
+    if (getpeername(m_descriptor, &name, &msg.msg_namelen) == -1) {
+        DEBUG_LOG(CONNECTION, "getpeername failed with " << errno);
+        return -1;
+    }
+    msg.msg_name = &name;
+
+    if (sendmsg(m_descriptor, &msg, 0) == -1) {
+        DEBUG_LOG(CONNECTION, "sendmsg failed with " << errno);
+        return -1;
+    }
+
+    return 0;
+}
 
 } // namespace onion

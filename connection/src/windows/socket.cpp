@@ -62,10 +62,12 @@ int Socket::SendMsg(buffer_t &data) const {
     WSAMSG msg{.name = &sock_addr, .namelen = sock_len, .lpBuffers = &buf, .dwBufferCount = 1};
 
     DWORD bytes_sent;
-    auto ret = WSASendMsg(m_descriptor, &msg, 0, &bytes_sent, nullptr, nullptr);
-    if (ret == SOCKET_ERROR)
-        DEBUG_LOG(CONNECTION, "WSASendMsg failed with " << WSAGetLastError());
-    return ret;
+    if (WSASendMsg(m_descriptor, &msg, 0, &bytes_sent, nullptr, nullptr) == SOCKET_ERROR) {
+        DEBUG_LOG(CONNECTION, "WSASendMsg failed with " << WSAGetLastError())
+        return SOCKET_ERROR;
+    }
+
+    return 0;
 }
 
 } // namespace onion
