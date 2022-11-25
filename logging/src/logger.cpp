@@ -8,6 +8,10 @@
 #include <unistd.h>
 #endif
 
+#ifdef __APPLE__
+#include <pthread.h>
+#endif
+
 namespace onion {
 
 void Logger::Log(const std::string &level, const std::string &component, const std::string &file,
@@ -28,10 +32,14 @@ unsigned int Logger::GetPid() {
 }
 
 unsigned int Logger::GetTid() {
-#ifndef _WIN32
-    return gettid();
-#else
+#ifdef _WIN32
     return GetCurrentThreadId();
+#elif defined(__APPLE__)
+    uint64_t tid;
+    pthread_threadid_np(NULL, &tid);
+    return tid;
+#else
+    return gettid();
 #endif
 }
 

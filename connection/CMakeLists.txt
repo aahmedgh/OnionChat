@@ -1,4 +1,4 @@
-if(${CMAKE_SYSTEM_NAME} STREQUAL Linux)
+if(${CMAKE_SYSTEM_NAME} STREQUAL Linux OR ${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
   set(CONNECTION_SOURCES src/unix/socket.cpp)
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL Windows)
   set(CONNECTION_SOURCES src/windows/socket.cpp)
